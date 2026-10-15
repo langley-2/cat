@@ -38,26 +38,15 @@ The vector illustration includes shaded fur, fine tabby markings, tufts, ear hai
 
 Import `langley-2/cat` into Vercel as a new project. Use **Other** for Framework Preset. The included `vercel.json` sets **Build Command: `npm run build`** and **Output Directory: `site`**. No environment variables or dependencies are required. Use Node.js 22 or newer. Vercel deployment is managed by the repository owner.
 
-The build generates `site/index.html`, a single page containing the game, styles, character, audio code, and favicon. It works at the project root and behind a `/cat` rewrite without asset-path conflicts. Source modules remain in `dist/` for local development.
+The build generates `site/index.html`, a single page containing the game, styles, character, audio code, and favicon. It uses no absolute asset paths, so it works on any domain. Source modules remain in `dist/` for local development.
 
 After deploying, test the production `*.vercel.app` URL on desktop and iPhone. The source has automated game, animation, and app wiring checks; this workspace could not run a fresh browser test.
 
-## Serve at langley.wyrk.work/cat
+## Serve at langley-cat.wyrk.work
 
-Keep `langley.wyrk.work` assigned to the existing portfolio project. In that project's routing configuration, merge these rules with any existing rules, before a catch-all. Replace `YOUR-CAT-PROJECT.vercel.app` with the game's stable production domain, not a temporary preview URL:
+The game is served at https://langley-cat.wyrk.work. In the game's Vercel project, add `langley-cat.wyrk.work` under **Settings → Domains**, then create the DNS record Vercel shows for it at the `wyrk.work` DNS provider, normally a `CNAME` from `langley-cat` to `cname.vercel-dns.com`. No changes to the portfolio project are needed.
 
-```json
-{
-  "rewrites": [
-    { "source": "/cat", "destination": "https://YOUR-CAT-PROJECT.vercel.app/" },
-    { "source": "/cat/", "destination": "https://YOUR-CAT-PROJECT.vercel.app/" }
-  ]
-}
-```
-
-These rules belong to the **portfolio project**, not this game. Adapt them to the portfolio's framework routing if necessary; do not replace its existing configuration wholesale. No DNS change is required. The game's production deployment must be accessible to visitors for this rewrite to work. This repository does not change the portfolio or deploy anything automatically outside your configured Vercel integration.
-
-Best scores are stored per browser origin, so records on the Vercel domain and on `langley.wyrk.work` are separate.
+Best scores are stored per browser origin, so records on the `*.vercel.app` domain and on `langley-cat.wyrk.work` are separate.
 
 ## Assets
 
