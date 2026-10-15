@@ -1,0 +1,16 @@
+{
+  "name": "the-belly-trap",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "test": "node tests/run.mjs",
+    "bundle": "node build-standalone.mjs",
+    "build": "node build-vercel.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f6">
+  <meta name="description" content="Hold the belly. Watch the eyes. Let go.">
+  <title>The Belly Trap</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%228%22%20fill%3D%22%23f7f5eb%22%2F%3E%3Cg%20fill%3D%22%233d5143%22%3E%3Cpath%20d%3D%22M9%2021c3-7%2011-7%2014%200%204%207-2%209-7%206-5%203-11%201-7-6Z%22%2F%3E%3Cellipse%20cx%3D%225%22%20cy%3D%2214%22%20rx%3D%223%22%20ry%3D%224%22%2F%3E%3Cellipse%20cx%3D%2212%22%20cy%3D%227%22%20rx%3D%223%22%20ry%3D%224%22%2F%3E%3Cellipse%20cx%3D%2221%22%20cy%3D%227%22%20rx%3D%223%22%20ry%3D%224%22%2F%3E%3Cellipse%20cx%3D%2227%22%20cy%3D%2214%22%20rx%3D%223%22%20ry%3D%224%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E%0A" type="image/svg+xml">
+  <style>:root{font-family:Arial,Helvetica,sans-serif;color:#64715d;background:#faf9f6;font-synthesis:none;-webkit-font-smoothing:antialiased}*{box-sizing:border-box}body{margin:0;overflow-x:hidden}main{min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:28px 16px 38px}.timer{text-align:center;position:relative;z-index:3;line-height:1;font-variant-numeric:tabular-nums;user-select:none}.score #current,.score #best{font:normal 42px/1 Georgia,serif;letter-spacing:-1.4px}.unit{font:italic 23px Georgia,serif;margin-left:5px;color:#a2a897}.timer-label{display:block;font-size:8px;letter-spacing:1.7px;margin-bottom:9px;color:#9b9f91}.scene{position:relative;width:min(560px,94vw,68svh);aspect-ratio:600/590;isolation:isolate;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;margin-top:6px}.kitty{position:absolute;width:100%;height:100%;inset:0;overflow:visible;pointer-events:none;z-index:1}.belly-target{position:absolute;left:50%;top:62%;transform:translate(-50%,-50%);width:29%;height:29%;z-index:3;border:0;border-radius:50%;background:transparent;touch-action:none;cursor:grab;-webkit-tap-highlight-color:transparent;display:grid;place-items:center}.belly-target:active{cursor:grabbing}.belly-target:focus-visible{outline:1px dashed #9d9e7c;outline-offset:-10px}.touch-ring{width:40px;height:40px;border:1px dashed #bba67d;border-radius:50%;opacity:0;transition:opacity .3s}.scene[data-state=idle] .belly-target:hover .touch-ring,.scene[data-state=safe] .belly-target:hover .touch-ring{opacity:.55}.scene[data-state=attacking] .belly-target{visibility:hidden}.guide{height:24px;margin-top:-9px;font:italic 17px/24px Georgia,serif;color:#969e8c;text-align:center;z-index:3;user-select:none;transition:color .15s}.scene[data-state=warning]+.guide{color:#a56c50}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@media(max-width:600px){main{padding:24px 8px 48px}.scene{width:min(100%,58svh);margin-top:22px}.score #current,.score #best{font-size:35px}.timer-label{font-size:7px}.guide{font-size:16px;margin-top:5px}}
+
+.score-pair{display:flex;align-items:center;justify-content:center;gap:38px}.score{min-width:80px}.score.record{color:#9b9f91}.record .unit{color:#b5b8ab}#stage{display:block;font-size:8px;letter-spacing:1.7px;color:#aaaD9f;margin-top:16px}
+</style>
+</head>
+<body>
+  <main aria-label="The Belly Trap">
+    <div class="timer" aria-label="Current and best score in seconds">
+      <div class="score-pair">
+        <div class="score"><span class="timer-label">current</span><span id="current">0.0</span><span class="unit">s</span></div>
+        <div class="score record"><span class="timer-label">best</span><span id="best">0.0</span><span class="unit">s</span></div>
+      </div>
+      <span id="stage">stage 1</span>
+    </div>
+    <div class="scene" id="scene" data-state="idle">
+          <svg id="kitty" class="kitty" viewBox="0 0 600 590" aria-hidden="true">
+            <defs>
+              <radialGradient id="fur" cx="32%" cy="24%" r="85%"><stop stop-color="#efbd7d"/><stop offset=".55" stop-color="#dfa05f"/><stop offset=".85" stop-color="#c5844c"/><stop offset="1" stop-color="#b17443"/></radialGradient><radialGradient id="belly-fur" cx="43%" cy="35%" r="65%"><stop stop-color="#fff8e5"/><stop offset=".55" stop-color="#f6e9cd"/><stop offset=".86" stop-color="#e8cfa5"/><stop offset="1" stop-color="#d5af7c"/></radialGradient><radialGradient id="face" cx="38%" cy="25%" r="85%"><stop stop-color="#f3c58b"/><stop offset=".58" stop-color="#e6ac6c"/><stop offset="1" stop-color="#cb8b52"/></radialGradient><radialGradient id="blush"><stop stop-color="#d3826e" stop-opacity=".55"/><stop offset="1" stop-color="#d3826e" stop-opacity="0"/></radialGradient>
+              <radialGradient id="ear-velvet" cx="45%" cy="30%" r="75%"><stop stop-color="#ecc3b2"/><stop offset=".6" stop-color="#d99c8b"/><stop offset="1" stop-color="#b87468"/></radialGradient>
+<radialGradient id="paw-pad" cx="35%" cy="25%" r="80%"><stop stop-color="#edbaa5"/><stop offset=".5" stop-color="#d99b89"/><stop offset="1" stop-color="#ba7c70"/></radialGradient>
+<radialGradient id="muzzle-fur" cx="40%" cy="25%" r="80%"><stop stop-color="#fff6de"/><stop offset=".7" stop-color="#f1dfbb"/><stop offset="1" stop-color="#d9ba8e"/></radialGradient>
+<radialGradient id="iris" cx="42%" cy="42%" r="55%"><stop stop-color="#f3de8f"/><stop offset=".5" stop-color="#bcb86b"/><stop offset=".8" stop-color="#8a985e"/><stop offset="1" stop-color="#56684b"/></radialGradient>
+<linearGradient id="claw-ivory" x1="0%" y1="0%" x2="80%" y2="100%"><stop stop-color="#cdbb9b"/><stop offset=".4" stop-color="#fff9e7"/><stop offset="1" stop-color="#e0d3b7"/></linearGradient>
+<radialGradient id="mouth-depth"><stop stop-color="#392a2d"/><stop offset="1" stop-color="#7c4b45"/></radialGradient>
+<linearGradient id="tongue" x2="20%" y2="100%"><stop stop-color="#b96c71"/><stop offset="1" stop-color="#eda9a1"/></linearGradient>
+<linearGradient id="nose" x2="20%" y2="100%"><stop stop-color="#dda698"/><stop offset="1" stop-color="#a16a5e"/></linearGradient>
+<clipPath id="body-clip"><path d="M224 203C200 228 185 263 179 303l-6 11 4 3-7 15 5 1c-4 23-4 45 0 66 7 76 50 107 125 108 83 1 123-45 128-111 2-22 1-44-2-65l5-2-7-14 4-3-8-12c-9-42-26-77-49-95Z"/></clipPath><clipPath id="belly-clip"><path d="M219 280l-8 22 5-2-10 19 5-2-7 21 4-2c-3 18-5 36-4 55 2 64 38 94 96 94s92-30 96-94c1-19-1-39-5-57l4 3-8-22 5 2-11-20 4 1-7-18c-32-47-126-45-159 0Z"/></clipPath><clipPath id="face-clip"><path d="M202 152c10-31 45-49 95-49 54 0 91 18 103 51l12 23-10 2 14 19-11 1c-7 45-49 73-106 73-55 0-100-27-107-72l-11-1 13-19-10-2Z"/></clipPath></defs>
+            <g class="cat-rig" stroke="#8b613f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <g class="tail"><path d="M390 436C482 474 537 401 507 355 490 328 458 348 474 374" fill="none" stroke="#976a46" stroke-width="47"/><path d="M390 433C482 471 537 398 507 352 490 325 458 345 474 371" fill="none" stroke="#daa062" stroke-width="42"/><path d="M506 388q-15-8-29-6m34 32q-16-13-30-13m-1 50q-7-18-16-23" fill="none" stroke="#b47b48" stroke-width="14"/><path d="M409 432C474 449 510 409 497 368" stroke="#f9cf94" stroke-width="5" opacity=".5" fill="none"/><g stroke="#ad7648" stroke-width="1.2" fill="none" opacity=".65"><path d="m431 448 2 7m5-7 2 6m34-16 4 5m-1-12 5 4m7-50 6-1m-7-6 6-2"/></g></g>
+              <g class="body-breathe">
+                <path d="M224 203C200 228 185 263 179 303l-6 11 4 3-7 15 5 1c-4 23-4 45 0 66 7 76 50 107 125 108 83 1 123-45 128-111 2-22 1-44-2-65l5-2-7-14 4-3-8-12c-9-42-26-77-49-95Z" fill="url(#fur)"/>
+                <path d="M219 280l-8 22 5-2-10 19 5-2-7 21 4-2c-3 18-5 36-4 55 2 64 38 94 96 94s92-30 96-94c1-19-1-39-5-57l4 3-8-22 5 2-11-20 4 1-7-18c-32-47-126-45-159 0Z" fill="url(#belly-fur)" stroke="none"/>
+                <path d="M194 285c-20 77-8 143 26 178" fill="none" stroke="#f8d6a1" stroke-width="5" opacity=".6"/>
+<path d="M412 360c5 63-17 106-61 123" fill="none" stroke="#a96c41" stroke-width="8" opacity=".15"/>
+<path d="M233 255l12 17 3-10 13 19 3-11 13 14 7-9 12 14 10-14 13 8 9-15 9 7 11-18 4 8 12-16" fill="#faedcf" stroke="none"/>
+<g stroke="#fff8e5" stroke-width="1.8" fill="none" opacity=".65"><path d="m249 274 6 10 2-5m15 4 5 8m40-9-5 10m25-15-6 10"/></g>
+<g stroke="#b97c46" stroke-width="10" fill="none"><path d="m190 315 24 10m-30 20 25 8m204-39-23 11m29 18-25 11"/></g>
+                <g fill="none" stroke="#c6ac83" stroke-width="1.5" opacity=".7"><path d="m261 307 4 6 5-7m48 19 3 6 5-6m-40 99 4 6 5-5m-38-60 3 5 3-5m76 29 4 5 4-6m-48-19 4 5 4-5"/></g>
+                <path d="M294 393q6 6 12 0" fill="none" stroke="#ceb58a"/>
+              <g clip-path="url(#belly-clip)" fill="none" stroke="#bd9d70" stroke-width=".85" opacity=".23"><path d="M304.3 397.8q0.1 4.7 1.3 7.2"/><path d="M365.3 450.9q2.3 3.1 3.5 4.8"/><path d="M373.6 368.9q2.6 2.9 3.8 4.5"/><path d="M232.6 384.6q-2.4 2.5 -1.2 3.8"/><path d="M262.2 402.3q-1.3 4.5 -0.1 6.9"/><path d="M341.2 308.5q1.4 2.1 2.6 3.3"/><path d="M259.1 391.8q-1.4 4.7 -0.2 7.2"/><path d="M349.1 460.1q1.7 3.9 2.9 5.9"/><path d="M322.1 345.3q0.8 3.0 2.0 4.6"/><path d="M251.0 388.8q-1.7 3.9 -0.5 6.0"/><path d="M311.6 363.2q0.4 3.3 1.6 5.1"/><path d="M258.0 438.9q-1.5 3.8 -0.3 5.9"/><path d="M340.5 438.3q1.4 2.9 2.6 4.4"/><path d="M236.3 343.6q-2.2 4.9 -1.0 7.5"/><path d="M347.6 365.6q1.7 4.5 2.9 6.9"/><path d="M273.4 447.9q-0.9 2.2 0.3 3.5"/><path d="M339.3 468.5q1.4 3.3 2.6 5.1"/><path d="M293.2 316.4q-0.2 2.8 1.0 4.4"/><path d="M255.6 346.0q-1.6 2.2 -0.4 3.3"/><path d="M266.4 311.7q-1.2 3.7 0.0 5.6"/><path d="M284.1 333.7q-0.6 5.0 0.6 7.7"/><path d="M268.1 388.1q-1.1 4.9 0.1 7.5"/><path d="M342.1 465.8q1.5 3.9 2.7 6.0"/><path d="M360.7 304.7q2.1 4.3 3.3 6.7"/><path d="M272.5 350.4q-1.0 4.5 0.2 6.8"/><path d="M339.4 354.2q1.4 3.1 2.6 4.8"/><path d="M263.0 460.2q-1.3 3.9 -0.1 6.1"/><path d="M259.9 388.3q-1.4 2.1 -0.2 3.3"/><path d="M261.5 382.8q-1.3 5.1 -0.1 7.9"/><path d="M358.6 391.0q2.1 4.4 3.3 6.8"/><path d="M258.6 417.3q-1.5 5.2 -0.3 8.0"/><path d="M242.4 459.9q-2.0 5.2 -0.8 7.9"/><path d="M277.7 438.7q-0.8 5.2 0.4 7.9"/><path d="M241.4 376.2q-2.1 3.9 -0.9 6.0"/><path d="M348.0 340.6q1.7 4.4 2.9 6.8"/><path d="M333.2 446.6q1.2 4.3 2.4 6.7"/><path d="M359.1 401.1q2.1 3.7 3.3 5.7"/><path d="M293.2 365.8q-0.2 3.5 1.0 5.3"/><path d="M298.4 363.2q-0.1 2.4 1.1 3.7"/><path d="M282.6 462.2q-0.6 2.9 0.6 4.5"/><path d="M379.2 442.0q2.8 3.4 4.0 5.3"/><path d="M253.0 450.3q-1.6 5.1 -0.4 7.8"/><path d="M268.3 412.7q-1.1 4.4 0.1 6.8"/><path d="M319.5 314.5q0.7 2.7 1.9 4.2"/><path d="M336.1 406.6q1.3 4.1 2.5 6.4"/><path d="M263.3 450.5q-1.3 4.5 -0.1 6.9"/><path d="M297.0 446.0q-0.1 2.9 1.1 4.5"/><path d="M305.0 386.1q0.2 5.1 1.4 7.8"/><path d="M371.7 354.0q2.5 4.5 3.7 6.9"/><path d="M266.1 451.1q-1.2 4.8 0.0 7.5"/><path d="M329.5 299.3q1.0 2.9 2.2 4.5"/><path d="M245.2 383.3q-1.9 2.1 -0.7 3.2"/><path d="M227.4 310.8q-2.5 4.8 -1.3 7.3"/><path d="M316.3 448.1q0.6 5.0 1.8 7.7"/><path d="M310.8 444.5q0.4 3.4 1.6 5.2"/><path d="M317.5 322.9q0.6 3.4 1.8 5.2"/><path d="M232.9 375.7q-2.3 5.1 -1.1 7.8"/><path d="M380.7 427.2q2.8 2.1 4.0 3.2"/><path d="M380.2 388.1q2.8 4.1 4.0 6.4"/><path d="M284.2 431.7q-0.6 3.0 0.6 4.6"/><path d="M235.1 375.2q-2.3 2.6 -1.1 3.9"/><path d="M254.0 328.4q-1.6 4.2 -0.4 6.5"/><path d="M329.4 332.6q1.0 4.2 2.2 6.4"/><path d="M221.6 462.1q-2.7 2.7 -1.5 4.2"/><path d="M301.4 359.3q0.0 4.7 1.2 7.3"/><path d="M289.6 323.0q-0.4 4.7 0.8 7.3"/><path d="M313.1 340.6q0.5 4.3 1.7 6.6"/><path d="M364.8 426.2q2.3 4.5 3.5 7.0"/></g><path d="M290 394q8 8 17 1" fill="none" stroke="#fff7df" stroke-width="2"/></g>
+              <g class="back-paw paw-left"><path d="M211 420c-29-5-57 9-53 43 4 35 40 57 70 48 24-8 30-36 18-62-8-17-21-27-35-29Z" fill="url(#face)"/><path d="M184 475c-1-16 13-28 25-18 5 4 13 8 15 18 2 18-39 19-40 0Z" fill="url(#paw-pad)" stroke="none"/><g fill="url(#paw-pad)" stroke="none"><ellipse cx="180" cy="449" rx="7" ry="10" transform="rotate(-25 180 449)"/><ellipse cx="200" cy="440" rx="7" ry="10"/><ellipse cx="220" cy="446" rx="7" ry="10" transform="rotate(-15 220 446)"/></g><g fill="none" stroke-width="1.3"><path d="M170 459q-1 22 16 34M223 431q13 11 15 25" stroke="#fbe0b5"/><path d="m184 432-2 6m24-11 1 6m17 1 3 5" stroke="#a76e44"/><path d="M194 470q0-8 6-9" stroke="#f5c9b3"/><path d="m228 485 4-3m-10 10 5-2" stroke="#b47d4d"/></g></g>
+              <g class="back-paw paw-right"><path d="M386 420c29-5 57 9 53 43-4 35-40 57-70 48-24-8-30-36-18-62 8-17 21-27 35-29Z" fill="url(#face)"/><path d="M413 475c1-16-13-28-25-18-5 4-13 8-15 18-2 18 39 19 40 0Z" fill="url(#paw-pad)" stroke="none"/><g fill="url(#paw-pad)" stroke="none"><ellipse cx="417" cy="449" rx="7" ry="10" transform="rotate(25 417 449)"/><ellipse cx="397" cy="440" rx="7" ry="10"/><ellipse cx="377" cy="446" rx="7" ry="10" transform="rotate(15 377 446)"/></g><g transform="translate(597 0) scale(-1 1)"><g fill="none" stroke-width="1.3"><path d="M170 459q-1 22 16 34M223 431q13 11 15 25" stroke="#fbe0b5"/><path d="m184 432-2 6m24-11 1 6m17 1 3 5" stroke="#a76e44"/><path d="M194 470q0-8 6-9" stroke="#f5c9b3"/><path d="m228 485 4-3m-10 10 5-2" stroke="#b47d4d"/></g></g></g>
+              <g class="head">
+                <g class="ear ear-left"><path d="M206 157c-17-27-22-69-10-86 25 3 51 23 64 48Z" fill="url(#face)"/><path d="M211 137q-16-32-10-48 25 10 38 30" fill="url(#ear-velvet)" stroke="none"/><g fill="none" stroke-linecap="round"><path d="M204 131q-8-22-6-38" stroke="#f9dab0" stroke-width="2"/><path d="m211 137-6-13 11 8-8-20 15 13-8-21 14 16" stroke="#f8dfbc" stroke-width="1.5"/><path d="m202 95 4 9m1-3 5 9" stroke="#bd8273" stroke-width="1"/></g></g>
+                <g class="ear ear-right"><path d="M391 157c17-27 22-69 10-86-25 3-51 23-64 48Z" fill="url(#face)"/><path d="M386 137q16-32 10-48-25 10-38 30" fill="url(#ear-velvet)" stroke="none"/><g transform="translate(597 0) scale(-1 1)"><g fill="none" stroke-linecap="round"><path d="M204 131q-8-22-6-38" stroke="#f9dab0" stroke-width="2"/><path d="m211 137-6-13 11 8-8-20 15 13-8-21 14 16" stroke="#f8dfbc" stroke-width="1.5"/><path d="m202 95 4 9m1-3 5 9" stroke="#bd8273" stroke-width="1"/></g></g></g>
+                <path id="face-outline" d="M202 152c10-31 45-49 95-49 54 0 91 18 103 51l12 23-10 2 14 19-11 1c-7 45-49 73-106 73-55 0-100-27-107-72l-11-1 13-19-10-2Z" fill="url(#face)"/>
+                <path d="M211 155q26-39 82-39" fill="none" stroke="#ffddb0" stroke-width="4" opacity=".55"/>
+<path d="M201 202q18 53 92 58 70-1 102-46" fill="none" stroke="#a96d40" stroke-width="5" opacity=".13"/>
+<g fill="#a96e41" stroke="none" opacity=".6"><path d="m256 110 10 17 6 20-12-10-11-24m72-4-8 18-1 18 11-14 8-19m-134 71 22 7-23 4m207-12-23 8 23 4"/></g>
+<g fill="#fff0d2" stroke="none" opacity=".78"><path d="M222 207l9-8 3 5 12-9 3 5 15-4-8 13-25 17-21-2 12-9-6-2Z"/><path d="M376 207l-9-8-3 5-12-9-3 5-15-4 8 13 25 17 21-2-12-9 6-2Z"/></g>
+<g fill="#bc8049" stroke="none"><path d="m278 106 10 31 9-32m6 0 9 31 10-29m-122 55 29 11-30 3m200-14-29 11 31 3"/></g>
+                <path d="M246 211c17-13 35-17 53-8 19-9 39-5 54 8 17 16-6 41-54 42-45 0-72-24-53-42Z" fill="url(#muzzle-fur)" stroke="none"/>
+                <ellipse cx="233" cy="213" rx="29" ry="20" fill="url(#blush)" stroke="none"/><ellipse cx="365" cy="213" rx="29" ry="20" fill="url(#blush)" stroke="none"/>
+<defs><clipPath id="eye-clip-left"><path class="eye-mask-left" d="M226 190 Q245 206 264 190 Q245 206 226 190Z"/></clipPath></defs>
+    <g class="eye-left" clip-path="url(#eye-clip-left)"><rect x="223" y="160" width="44" height="60" fill="url(#iris)" stroke="none"/><g stroke="#e8d486" stroke-width=".65" opacity=".6"><path d="M254.00 188.00L263.00 188.00"/><path d="M253.69 191.11L262.39 193.95"/><path d="M252.79 194.00L260.59 199.50"/><path d="M251.36 196.49L257.73 204.26"/><path d="M249.50 198.39L254.00 207.92"/><path d="M247.33 199.59L249.66 210.22"/><path d="M245.00 200.00L245.00 211.00"/><path d="M242.67 199.59L240.34 210.22"/><path d="M240.50 198.39L236.00 207.92"/><path d="M238.64 196.49L232.27 204.26"/><path d="M237.21 194.00L229.41 199.50"/><path d="M236.31 191.11L227.61 193.95"/><path d="M236.00 188.00L227.00 188.00"/><path d="M236.31 184.89L227.61 182.05"/><path d="M237.21 182.00L229.41 176.50"/><path d="M238.64 179.51L232.27 171.74"/><path d="M240.50 177.61L236.00 168.08"/><path d="M242.67 176.41L240.34 165.78"/><path d="M245.00 176.00L245.00 165.00"/><path d="M247.33 176.41L249.66 165.78"/><path d="M249.50 177.61L254.00 168.08"/><path d="M251.36 179.51L257.73 171.74"/><path d="M252.79 182.00L260.59 176.50"/><path d="M253.69 184.89L262.39 182.05"/></g><ellipse class="pupil-left" cx="245" cy="188" rx="6" ry="19" fill="#30442f" stroke="none"/><circle cx="250" cy="180" r="4" fill="#fff8dc" stroke="none"/><ellipse cx="245" cy="188" rx="20" ry="24" fill="none" stroke="#536047" stroke-width="2"/><circle cx="240" cy="195" r="1.5" fill="#fff8de" stroke="none"/></g>
+    <path class="eye-lid-left" d="M226 190 Q245 206 264 190" fill="none" stroke="#634e38" stroke-width="3.5"/>
+<defs><clipPath id="eye-clip-right"><path class="eye-mask-right" d="M335 190 Q354 206 373 190 Q354 206 335 190Z"/></clipPath></defs>
+    <g class="eye-right" clip-path="url(#eye-clip-right)"><rect x="332" y="160" width="44" height="60" fill="url(#iris)" stroke="none"/><g stroke="#e8d486" stroke-width=".65" opacity=".6"><path d="M363.00 188.00L372.00 188.00"/><path d="M362.69 191.11L371.39 193.95"/><path d="M361.79 194.00L369.59 199.50"/><path d="M360.36 196.49L366.73 204.26"/><path d="M358.50 198.39L363.00 207.92"/><path d="M356.33 199.59L358.66 210.22"/><path d="M354.00 200.00L354.00 211.00"/><path d="M351.67 199.59L349.34 210.22"/><path d="M349.50 198.39L345.00 207.92"/><path d="M347.64 196.49L341.27 204.26"/><path d="M346.21 194.00L338.41 199.50"/><path d="M345.31 191.11L336.61 193.95"/><path d="M345.00 188.00L336.00 188.00"/><path d="M345.31 184.89L336.61 182.05"/><path d="M346.21 182.00L338.41 176.50"/><path d="M347.64 179.51L341.27 171.74"/><path d="M349.50 177.61L345.00 168.08"/><path d="M351.67 176.41L349.34 165.78"/><path d="M354.00 176.00L354.00 165.00"/><path d="M356.33 176.41L358.66 165.78"/><path d="M358.50 177.61L363.00 168.08"/><path d="M360.36 179.51L366.73 171.74"/><path d="M361.79 182.00L369.59 176.50"/><path d="M362.69 184.89L371.39 182.05"/></g><ellipse class="pupil-right" cx="354" cy="188" rx="6" ry="19" fill="#30442f" stroke="none"/><circle cx="359" cy="180" r="4" fill="#fff8dc" stroke="none"/><ellipse cx="354" cy="188" rx="20" ry="24" fill="none" stroke="#536047" stroke-width="2"/><circle cx="349" cy="195" r="1.5" fill="#fff8de" stroke="none"/></g>
+    <path class="eye-lid-right" d="M335 190 Q354 206 373 190" fill="none" stroke="#634e38" stroke-width="3.5"/>
+                <g class="jaw" transform="translate(299 226) scale(1 0) translate(-299 -226)">
+      <path d="M270 225Q299 234 328 225C341 251 327 295 300 296C270 295 258 250 270 225Z" fill="url(#face)"/><path d="M273 226Q299 237 325 226C333 248 322 285 300 286C278 285 266 249 273 226Z" fill="url(#mouth-depth)" stroke="#77503d" stroke-width="2"/>
+      <path d="M277 232q22 10 45 0" fill="none" stroke="#be7c78" stroke-width="3"/><path d="M280 275Q278 257 298 260Q319 258 320 276Q300 290 280 275Z" fill="url(#tongue)" stroke="none"/>
+      <path d="M279 232L285 252Q289 242 290 234M310 234Q311 245 315 252L321 232" fill="#fff5d7" stroke="#e3d2ad" stroke-width="1"/>
+      <path d="M286 277L288 266 294 282M305 282L312 266 314 277" fill="#fff5d7" stroke="none"/>
+    <path d="M299 264v12" stroke="#ad6870" stroke-width="1.2" fill="none"/><path d="M288 280q10 4 20 0" stroke="#f6bcb1" stroke-width="1.1" fill="none"/></g><path d="M291 212q8-5 16 0l-8 7Z" fill="url(#nose)" stroke="#a16f60" stroke-width="1.5"/><path class="smile" d="M299 219v6m-14 0q7 11 14 0 7 11 14 0" fill="none" stroke="#7e6046" stroke-width="2"/>
+                <g class="whiskers" stroke="#96754f" stroke-width="1.5" fill="none"><path d="m239 220-51-9m53 17-58 5m58 2-44 15m162-30 51-9m-53 17 58 5m-58 2 44 15"/></g>
+                <g fill="none" stroke="#b48152" stroke-width="1.3"><path d="m216 162 3-5 4 3m155 2-3-5-4 3m-103-17 3 5 3-3m51-5 3 5 3-3"/></g>
+              <g clip-path="url(#face-clip)" fill="none" stroke="#9f6a40" stroke-width=".9" opacity=".3"><path d="M269.3 124.1q-0.6 1.1 -0.6 2.2"/><path d="M379.1 123.9q1.7 1.6 1.7 3.1"/><path d="M360.3 118.3q1.3 2.4 1.3 4.8"/><path d="M311.4 121.0q0.3 2.2 0.3 4.4"/><path d="M333.3 116.0q0.7 1.7 0.7 3.5"/><path d="M341.5 125.8q0.9 1.5 0.9 3.0"/><path d="M371.0 119.6q1.5 1.4 1.5 2.8"/><path d="M223.0 135.9q-1.6 1.7 -1.6 3.3"/><path d="M253.4 117.4q-0.9 1.2 -0.9 2.4"/><path d="M350.6 140.3q1.1 2.2 1.1 4.4"/><path d="M220.7 157.8q-1.6 2.0 -1.6 4.1"/><path d="M314.5 151.9q0.3 1.1 0.3 2.2"/><path d="M320.9 127.3q0.5 1.0 0.5 2.1"/><path d="M350.7 114.4q1.1 2.1 1.1 4.2"/><path d="M253.7 152.8q-0.9 1.1 -0.9 2.2"/><path d="M295.2 159.0q-0.1 1.8 -0.1 3.6"/><path d="M323.5 137.3q0.5 1.9 0.5 3.8"/><path d="M278.5 125.4q-0.4 1.4 -0.4 2.9"/><path d="M367.4 128.2q1.4 2.0 1.4 4.1"/><path d="M387.4 156.7q1.8 2.3 1.8 4.5"/><path d="M379.5 143.5q1.7 1.8 1.7 3.6"/><path d="M219.3 116.5q-1.7 1.4 -1.7 2.9"/><path d="M295.7 136.0q-0.1 1.0 -0.1 2.0"/><path d="M315.9 129.6q0.4 1.6 0.4 3.2"/><path d="M215.8 149.5q-1.7 2.2 -1.7 4.4"/><path d="M348.9 118.3q1.0 1.0 1.0 2.1"/><path d="M391.0 142.0q1.9 2.4 1.9 4.8"/><path d="M280.4 150.4q-0.4 1.2 -0.4 2.3"/><path d="M214.3 145.1q-1.8 2.0 -1.8 4.0"/><path d="M270.1 138.1q-0.6 1.9 -0.6 3.9"/><path d="M244.8 113.2q-1.1 1.7 -1.1 3.4"/><path d="M252.4 158.2q-1.0 1.3 -1.0 2.6"/><path d="M305.1 240.9q0.1 1.6 0.1 3.3"/><path d="M238.6 241.0q-1.3 2.1 -1.3 4.2"/><path d="M348.6 254.5q1.0 2.5 1.0 5.0"/><path d="M391.4 250.3q1.9 2.3 1.9 4.6"/><path d="M335.0 258.1q0.7 1.4 0.7 2.7"/><path d="M386.7 255.5q1.8 1.2 1.8 2.4"/><path d="M198.2 245.3q-2.1 2.0 -2.1 4.0"/><path d="M264.8 245.7q-0.7 2.1 -0.7 4.3"/><path d="M248.4 235.2q-1.1 1.6 -1.1 3.3"/><path d="M269.1 254.2q-0.6 1.2 -0.6 2.3"/><path d="M370.0 264.5q1.5 2.1 1.5 4.2"/><path d="M302.0 240.4q0.1 1.1 0.1 2.1"/><path d="M334.7 263.2q0.7 1.5 0.7 2.9"/><path d="M364.2 263.8q1.4 2.2 1.4 4.5"/><path d="M302.9 256.0q0.1 1.5 0.1 3.0"/><path d="M297.5 240.6q-0.0 2.2 -0.0 4.4"/></g><g stroke="#ffe6bd" stroke-width="1.4" fill="none" opacity=".9"><path d="m236 143 2 5m4-9 2 5m93-4-2 5m7-1-2 5m-130 64 6 3m-2 3 6 2m154-7-6 3m2 3-6 2"/></g>
+<g fill="#ae8560" stroke="none" opacity=".65"><circle cx="270" cy="217" r="1.3"/><circle cx="263" cy="223" r="1"/><circle cx="275" cy="226" r="1"/><circle cx="328" cy="217" r="1.3"/><circle cx="335" cy="223" r="1"/><circle cx="323" cy="226" r="1"/></g>
+<path d="M294 212q5-2 9 0" stroke="#f5c5b1" stroke-width="1.5" fill="none"/>
+</g>
+<g class="limb-left">
+      <path class="arm-bone-left" d="M210 240 Q180 265 190 292" fill="none" stroke="#8b613f" stroke-width="43"/>
+      <path class="arm-fur-left" d="M210 240 Q180 265 190 292" fill="none" stroke="url(#fur)" stroke-width="39"/>
+      <g class="hand-left" transform="translate(190 292)">
+        <path d="M-24-22C-36-7-33 18-22 26Q-13 35-5 29Q5 37 14 29Q28 29 31 14C38-12 21-30 0-30Q-16-31-24-22Z" fill="url(#face)"/>
+        <path d="M-24-14q-7 14 0 27" fill="none" stroke="#ffdeb0" stroke-width="2.3"/>
+<path d="M24-13q10 20-3 32" fill="none" stroke="#b47a49" stroke-width="2" opacity=".45"/>
+<g fill="none" stroke="#aa7446" stroke-width="1" opacity=".65"><path d="m-14-23 2 4m5-6 1 4m6-4 1 4m7-2 2 4m-39 23 3 2m47-8-3 3"/></g>
+<g class="pads-left" fill="url(#paw-pad)" stroke="none"><ellipse cx="0" cy="-5" rx="14" ry="12"/><ellipse cx="-18" cy="17" rx="6" ry="7"/><ellipse cx="0" cy="22" rx="6" ry="7"/><ellipse cx="18" cy="17" rx="6" ry="7"/><path d="M-9-8q1-5 7-5m-18 28 2-2m16 8 2-2m16-4 2-2" fill="none" stroke="#f5cbb7" stroke-width="1.4"/></g>
+        <g class="claws-left" fill="url(#claw-ivory)" stroke="#a18a68" stroke-width="1.2" transform="translate(0 23) scale(1 0) translate(0 -23)">
+          <path d="M-24 22Q-31 43-19 54Q-21 34-13 25Z"/><path d="M-6 29Q-11 52 2 62Q-1 41 6 29Z"/><path d="M13 25Q11 48 24 53Q18 36 26 22Z"/>
+        <path d="M-21 30q-3 8 0 15M0 35q-2 10 1 17m19-20q-2 8 1 13" fill="none" stroke="#fffdf0" stroke-width="1.3"/></g>
+        <path d="M-12 18l2 7M9 19l-1 8" fill="none" stroke="#b37a4a" stroke-width="1.5"/>
+      </g>
+    </g><g class="limb-right">
+      <path class="arm-bone-right" d="M210 240 Q180 265 190 292" fill="none" stroke="#8b613f" stroke-width="43"/>
+      <path class="arm-fur-right" d="M210 240 Q180 265 190 292" fill="none" stroke="url(#fur)" stroke-width="39"/>
+      <g class="hand-right" transform="translate(190 292)">
+        <path d="M-24-22C-36-7-33 18-22 26Q-13 35-5 29Q5 37 14 29Q28 29 31 14C38-12 21-30 0-30Q-16-31-24-22Z" fill="url(#face)"/>
+        <path d="M-24-14q-7 14 0 27" fill="none" stroke="#ffdeb0" stroke-width="2.3"/>
+<path d="M24-13q10 20-3 32" fill="none" stroke="#b47a49" stroke-width="2" opacity=".45"/>
+<g fill="none" stroke="#aa7446" stroke-width="1" opacity=".65"><path d="m-14-23 2 4m5-6 1 4m6-4 1 4m7-2 2 4m-39 23 3 2m47-8-3 3"/></g>
+<g class="pads-right" fill="url(#paw-pad)" stroke="none"><ellipse cx="0" cy="-5" rx="14" ry="12"/><ellipse cx="-18" cy="17" rx="6" ry="7"/><ellipse cx="0" cy="22" rx="6" ry="7"/><ellipse cx="18" cy="17" rx="6" ry="7"/><path d="M-9-8q1-5 7-5m-18 28 2-2m16 8 2-2m16-4 2-2" fill="none" stroke="#f5cbb7" stroke-width="1.4"/></g>
+        <g class="claws-right" fill="url(#claw-ivory)" stroke="#a18a68" stroke-width="1.2" transform="translate(0 23) scale(1 0) translate(0 -23)">
+          <path d="M-24 22Q-31 43-19 54Q-21 34-13 25Z"/><path d="M-6 29Q-11 52 2 62Q-1 41 6 29Z"/><path d="M13 25Q11 48 24 53Q18 36 26 22Z"/>
+        <path d="M-21 30q-3 8 0 15M0 35q-2 10 1 17m19-20q-2 8 1 13" fill="none" stroke="#fffdf0" stroke-width="1.3"/></g>
+        <path d="M-12 18l2 7M9 19l-1 8" fill="none" stroke="#b37a4a" stroke-width="1.5"/>
+      </g>
+    </g>
+            </g>
+          </svg>
+
+      <button id="belly" class="belly-target" aria-label="Hold to rub the belly. Release when the cat opens its eyes." aria-describedby="instructions"><span class="touch-ring" aria-hidden="true"></span></button>
+    </div>
+    <div class="guide" id="game-status" role="status" aria-live="polite"><span id="status-text">rub me</span></div>
+    <p id="instructions" class="sr-only">Hold the belly with a mouse, touch, or Space. Keep holding until the eyes open, then release immediately. A clean escape banks your tickle time and lets you continue the current run. Releasing early or getting caught resets your current score to zero. Best records only time banked by clean escapes and is saved in this browser. Every two escapes advances the difficulty, up to stage five. Leaving the game during a rub ends the run. Reloading starts a fresh run. Press M to toggle sound.</p>
+  </main>
+  <script>
+(()=>{'use strict';
+const STAGES = [
+  {waitMin:650,waitMax:3700,reactionMin:330,reactionMax:460},
+  {waitMin:550,waitMax:3400,reactionMin:300,reactionMax:410},
+  {waitMin:450,waitMax:3100,reactionMin:270,reactionMax:365},
+  {waitMin:400,waitMax:2800,reactionMin:240,reactionMax:325},
+  {waitMin:350,waitMax:2500,reactionMin:220,reactionMax:290},
+];
+class TickleGame {
+  constructor({best=0,random=Math.random,onState=()=>{}}={}) {
+    this.best=Number.isFinite(best)&&best>=0?best:0;
+    this.current=0;this.banked=0;this.escapes=0;
+    this.random=random;this.onState=onState;this.state='idle';this.round=0;
+  }
+  get stage(){return Math.min(STAGES.length-1,Math.floor(this.escapes/2));}
+  get difficulty(){return STAGES[this.stage];}
+  setState(state){this.state=state;this.onState(state);}
+  endRun(){this.current=0;this.banked=0;this.round=0;this.escapes=0;}
+  begin(now){
+    if(!['idle','safe'].includes(this.state))return false;
+    this.round=0;this.started=now;this.outcome=null;
+    const d=this.difficulty;
+    this.warningAt=now+d.waitMin+this.random()*(d.waitMax-d.waitMin);
+    this.attackAt=this.warningAt+d.reactionMin+this.random()*(d.reactionMax-d.reactionMin);
+    this.setState('tickling');return true;
+  }
+  advance(now){
+    if(this.state==='tickling'){
+      // Live time is provisional until an eyes-open escape succeeds.
+      this.round=Math.max(this.round,(Math.min(now,this.warningAt)-this.started)/1000);
+      this.current=this.banked+this.round;
+      if(now>=this.warningAt)this.setState('warning');
+    }
+    if(this.state==='warning'&&now>=this.attackAt){
+      this.endRun();this.outcome='caught';this.setState('attacking');
+    }
+  }
+  release(now,cancelled=false){
+    // Losing focus/capture ends the run without a surprise offscreen attack.
+    if(cancelled&&['tickling','warning'].includes(this.state)){
+      this.endRun();this.outcome='interrupted';this.setState('safe');return;
+    }
+    this.advance(now);
+    if(this.state==='warning'){
+      this.outcome='escaped';this.banked=this.current;
+      this.best=Math.max(this.best,this.banked);
+      this.escapes=Math.min(8,this.escapes+1);this.setState('safe');
+    }else if(this.state==='tickling'){
+      this.endRun();this.outcome='early';this.setState('safe');
+    }
+  }
+  reset(){if(['caught','safe'].includes(this.state)){this.round=0;this.setState('idle');}}
+}
+
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const ease=t=>{t=clamp(t);return t*t*(3-2*t);};
+const mix=(a,b,t)=>a+(b-a)*t;
+const blend=(a,b,t)=>Object.fromEntries(Object.keys(b).map(k=>[k,mix(a[k]??b[k],b[k],t)]));
+const around=(x,y,angle=0,sx=1,sy=sx,dx=0,dy=0)=>`translate(${x+dx} ${y+dy}) rotate(${angle}) scale(${sx} ${sy}) translate(${-x} ${-y})`;
+
+// One SVG character, continuously posed through shoulders, wrists, hips, spine,
+// neck and ears. No images, texture blending, canvases, or replacement characters.
+class KittenAnimator {
+  constructor(svg,target,{reduced=false}={}){
+    this.svg=svg;this.target=target;this.reduced=reduced;this.state='idle';this.clock=performance.now();this.rub={x:0,y:0};this.finger={x:0,y:0};
+    this.nodes=Object.fromEntries(['cat-rig','body-breathe','head','tail','paw-left','paw-right','ear-left','ear-right','hand-left','hand-right','arm-bone-left','arm-bone-right','arm-fur-left','arm-fur-right','claws-left','claws-right','pads-left','pads-right','jaw','smile','eye-mask-left','eye-mask-right','eye-lid-left','eye-lid-right','pupil-left','pupil-right'].map(k=>[k,svg.querySelector('.'+k)]));
+    this.pose=this.rest(0,false);this.render(this.pose);
+  }
+  rest(t,happy){
+    const motion=this.reduced?0:1,f=happy?1:0,w=t*(happy?3.8:1.25),s=Math.sin;
+    const pose={
+      x:motion*(s(w*.7)*7+this.rub.x*8*f),y:motion*s(w)*4,
+      roll:motion*(-27+s(w*.63)*(happy?34:9)+this.rub.x*12*f),sx:1+motion*s(w)*(.012+.035*f),sy:1+motion*Math.cos(w)*(.016+.025*f),
+      bodyAngle:motion*s(w+.4)*(2+4*f),bodyScaleX:1+motion*s(w)*(.012+.025*f),bodyScaleY:1+motion*Math.cos(w*.8)*.025,
+      headX:motion*this.rub.x*6*f,headY:motion*(s(w+.6)*4-5*f),headAngle:motion*(s(w*.8)*(4+9*f)-this.rub.x*9*f),headScale:1,
+      leftX:198+motion*(s(w+1)*(8+18*f)),leftY:281+motion*(Math.cos(w)*(8+25*f)),leftAngle:motion*(-12+s(w+.8)*(14+24*f)),leftScale:1,
+      rightX:400+motion*s(w+2.7)*(8+18*f),rightY:280+motion*Math.cos(w+2)*(8+25*f),rightAngle:motion*(12+s(w+2.5)*(14+24*f)),rightScale:1,
+      leftKick:motion*s(w*1.1)*(.2+.8*f),rightKick:motion*s(w*1.1+2)*(.2+.8*f),feetScale:1,
+      tail:motion*(s(w*.8)*15+s(w*2)*5*f),earLeft:motion*s(w*.4)*3,earRight:motion*s(w*.4+1)*3,
+      eyes:0,anger:0,mouth:0,claws:0,pads:.55+.2*f
+    };
+    if(!happy){
+      const breath=motion*Math.sin(t*1.65);
+      Object.assign(pose,{x:0,y:0,roll:motion*-28,sx:1,sy:1,
+        bodyAngle:0,bodyScaleX:1+breath*.008,bodyScaleY:1+breath*.014,
+        headX:0,headY:breath*1.2,headAngle:motion*(-4+Math.sin(t*.65)),
+        leftX:198,leftY:281+breath,rightX:400,rightY:280+breath,
+        leftAngle:-12*motion,rightAngle:12*motion,leftKick:0,rightKick:0,
+        tail:motion*Math.sin(t*.6)*2,earLeft:0,earRight:0});
+    }
+    return pose;
+  }
+  setState(state,now=performance.now()){
+    this.from={...this.pose};this.changedAt=now;this.state=state;
+    if(state==='warning')this.alert={...this.pose,eyes:1,mouth:0,headAngle:0,earLeft:-13,earRight:13};
+  }
+  track(clientX,clientY){
+    const rect=this.svg.getBoundingClientRect();this.finger.x=clamp((clientX-rect.left)/rect.width*2-1,-1,1);this.finger.y=clamp((clientY-rect.top)/rect.height*2-1,-1,1);
+  }
+  pounce({onImpact=()=>{},onComplete=()=>{}},now=performance.now()){
+    this.state='attacking';const base={...this.pose};
+    const neutral={...this.rest(0,false),roll:0,eyes:1,anger:1,mouth:.7,pads:1,claws:1};
+    this.attack={start:now,onImpact,onComplete,impacted:false,keys:[
+      [0,base],
+      [170,{...neutral,x:0,y:35,roll:-5,sx:1.08,sy:.78,headY:22,headAngle:7,leftX:245,leftY:280,leftAngle:-30,rightX:351,rightY:283,rightAngle:30,feetScale:1.1,leftKick:-.7,rightKick:-.7,tail:-32,mouth:.25,claws:.4}],
+      [420,{...neutral,x:-8,y:65,roll:4,sx:2.05,sy:2.05,bodyScaleX:.83,bodyScaleY:.65,headY:45,headScale:1.05,headAngle:-3,leftX:155,leftY:250,leftAngle:-27,leftScale:1.9,rightX:426,rightY:265,rightAngle:24,rightScale:1.65,feetScale:.57,leftKick:-1.4,rightKick:-1.4,earLeft:-34,earRight:34,tail:42,mouth:1}],
+      [620,{...neutral,x:18,y:70,roll:-6,sx:1.95,sy:1.95,bodyScaleX:.86,bodyScaleY:.7,headY:40,headAngle:7,leftX:286,leftY:300,leftAngle:-62,leftScale:2.1,rightX:398,rightY:225,rightAngle:35,rightScale:1.5,feetScale:.6,leftKick:-1.3,rightKick:-1.1,earLeft:-35,earRight:35,mouth:.9,tail:20}],
+      [900,{...neutral,x:14,y:12,roll:15,sx:1.15,sy:1.2,headY:20,headAngle:-5,leftX:191,leftY:289,leftAngle:10,leftScale:1.1,rightX:400,rightY:300,rightAngle:15,rightScale:1.1,feetScale:.8,leftKick:-.5,rightKick:-.5,mouth:.4,claws:.3,tail:-22}],
+      [1120,{...neutral,x:0,y:25,roll:6,sx:1.12,sy:.86,headY:13,headAngle:2,leftX:176,leftY:319,leftAngle:-25,rightX:425,rightY:319,rightAngle:25,feetScale:1,leftKick:.3,rightKick:.3,mouth:0,claws:0,eyes:.5,anger:0,earLeft:0,earRight:0,tail:-10}],
+      [1510,{...this.rest(0,false),x:-8,y:0,roll:-52,sx:1,sy:1,leftX:176,leftY:270,leftAngle:-40,rightX:413,rightY:262,rightAngle:35,leftKick:.7,rightKick:-.5,headAngle:10,tail:26}],
+    ]};
+  }
+  update(now){
+    const t=(now-this.clock)/1000;
+    this.rub.x=mix(this.rub.x,this.finger.x,.12);this.rub.y=mix(this.rub.y,this.finger.y,.12);
+    if(this.attack){
+      const a=this.attack,elapsed=now-a.start,keys=[...a.keys,[1990,this.rest(t,false)]];
+      let i=1;while(i<keys.length-1&&elapsed>keys[i][0])i++;
+      this.pose=blend(keys[i-1][1],keys[i][1],ease((elapsed-keys[i-1][0])/(keys[i][0]-keys[i-1][0])));
+      if(this.reduced){this.pose.sx=1;this.pose.sy=1;this.pose.x=0;this.pose.y=0;this.pose.roll=0;this.pose.leftScale=Math.min(1.2,this.pose.leftScale);this.pose.rightScale=Math.min(1.2,this.pose.rightScale);}
+      this.render(this.pose);
+      if(elapsed>=420&&!a.impacted){a.impacted=true;a.onImpact();}
+      if(elapsed>=1990){this.attack=null;this.state='caught';this.from={...this.pose};this.changedAt=now;a.onComplete();}
+    }else{
+      const target=this.state==='warning'?this.alert:this.rest(t,this.state==='tickling');
+      this.pose=this.from?blend(this.from,target,ease((now-this.changedAt)/(this.state==='warning'?65:350))):target;
+      this.render(this.pose);
+    }
+  }
+  render(p){
+    const n=this.nodes,attr=(name,value)=>n[name].setAttribute('transform',value);
+    attr('cat-rig',around(300,320,p.roll,p.sx,p.sy,p.x,p.y));
+    attr('body-breathe',around(300,340,p.bodyAngle,p.bodyScaleX,p.bodyScaleY));
+    attr('head',around(300,230,p.headAngle,p.headScale,p.headScale,p.headX,p.headY));
+    attr('ear-left',around(239,139,p.earLeft));attr('ear-right',around(357,139,p.earRight));
+    attr('tail',around(390,432,p.tail));
+    attr('paw-left',around(203,460,p.leftKick*24,p.feetScale,p.feetScale,-p.leftKick*15,-p.leftKick*35));
+    attr('paw-right',around(394,460,-p.rightKick*24,p.feetScale,p.feetScale,p.rightKick*15,-p.rightKick*35));
+    for(const side of ['left','right']){
+      const x=p[side+'X'],y=p[side+'Y'],shoulder=side==='left'?211:386;
+      const bend=side==='left'?-22:22,path=`M${shoulder} 240 Q${(shoulder+x)/2+bend} ${(240+y)/2+10} ${x} ${y}`;
+      n['arm-bone-'+side].setAttribute('d',path);n['arm-fur-'+side].setAttribute('d',path);
+      attr('hand-'+side,`translate(${x} ${y}) rotate(${p[side+'Angle']}) scale(${p[side+'Scale']})`);
+      attr('claws-'+side,around(0,23,0,1,p.claws));attr('pads-'+side,`scale(1 ${p.pads})`);
+      const cx=side==='left'?245:354,sign=side==='left'?1:-1;
+      const y0=190-p.anger*7*sign,y1=190+p.anger*7*sign,upper=206-p.eyes*48,lower=206+p.eyes*4;
+      const top=`M${cx-19} ${y0} Q${cx} ${upper} ${cx+19} ${y1}`;
+      n['eye-mask-'+side].setAttribute('d',`${top} Q${cx} ${lower} ${cx-19} ${y0}Z`);
+      n['eye-lid-'+side].setAttribute('d',top);n['pupil-'+side].setAttribute('rx',6-3*p.anger);
+    }
+    attr('jaw',around(299,226,0,1,p.mouth));
+    n.smile.setAttribute('d',`M299 219v6m-14 0q7 ${11*(1-p.mouth)} 14 0q7 ${11*(1-p.mouth)} 14 0`);
+    // Keep the touch target attached to the moving belly, even during a roll.
+    if(this.state!=='attacking'){
+      const matrix=n['body-breathe'].getScreenCTM();
+      if(matrix){const center=new DOMPoint(300,365).matrixTransform(matrix),rect=this.svg.parentElement.getBoundingClientRect();this.target.style.left=`${center.x-rect.left}px`;this.target.style.top=`${center.y-rect.top}px`;}
+    }
+  }
+}
+
+class CatAudio {
+  constructor(){this.enabled=false;this.context=null;this.purring=null;}
+  async unlock(){
+    if(!this.enabled)return;
+    try {this.context ??= new (window.AudioContext||window.webkitAudioContext)();if(this.context.state==='suspended')await this.context.resume();} catch {this.enabled=false;}
+  }
+  noise(seconds){const c=this.context,b=c.createBuffer(1,c.sampleRate*seconds,c.sampleRate),d=b.getChannelData(0);let last=0;for(let i=0;i<d.length;i++){last=(last+.035*(Math.random()*2-1))/1.025;d[i]=last*8;}const s=c.createBufferSource();s.buffer=b;return s;}
+  purr(){
+    this.stop();if(!this.enabled||!this.context)return;
+    const c=this.context,g=c.createGain(),f=c.createBiquadFilter(),n=this.noise(3),lfo=c.createOscillator(),depth=c.createGain();
+    n.loop=true;f.type='lowpass';f.frequency.value=280;g.gain.value=.11;lfo.frequency.value=25;depth.gain.value=.07;
+    lfo.connect(depth).connect(g.gain);n.connect(f).connect(g).connect(c.destination);n.start();lfo.start();this.purring={n,lfo,g};
+  }
+  stop(){if(this.purring){const {n,lfo,g}=this.purring;g.gain.setTargetAtTime(0,this.context.currentTime,.025);setTimeout(()=>{n.stop();lfo.stop();g.disconnect();},130);this.purring=null;}}
+  growl(){
+    this.stop();if(!this.enabled||!this.context)return;
+    const c=this.context,t=c.currentTime,n=this.noise(1.3),f=c.createBiquadFilter(),g=c.createGain(),o=c.createOscillator(),og=c.createGain();
+    f.type='lowpass';f.frequency.setValueAtTime(700,t);f.frequency.exponentialRampToValueAtTime(1800,t+.32);f.frequency.exponentialRampToValueAtTime(160,t+1.2);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.5,t+.18);g.gain.exponentialRampToValueAtTime(.001,t+1.3);n.connect(f).connect(g).connect(c.destination);
+    o.type='sawtooth';o.frequency.setValueAtTime(86,t);o.frequency.exponentialRampToValueAtTime(48,t+1.1);og.gain.setValueAtTime(.025,t);og.gain.exponentialRampToValueAtTime(.001,t+1.1);o.connect(og).connect(f);n.start();o.start();o.stop(t+1.3);
+  }
+  chime(){if(!this.enabled||!this.context)return;const c=this.context,t=c.currentTime;for(const [freq,delay] of [[523,0],[784,.09]]){const o=c.createOscillator(),g=c.createGain();o.frequency.value=freq;g.gain.setValueAtTime(0,t+delay);g.gain.linearRampToValueAtTime(.035,t+delay+.01);g.gain.exponentialRampToValueAtTime(.001,t+delay+.3);o.connect(g).connect(c.destination);o.start(t+delay);o.stop(t+delay+.32);}}
+}
+
+
+
+
+const $=id=>document.getElementById(id);
+const scene=$('scene'),belly=$('belly');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const audio=new CatAudio();audio.enabled=true;
+const kitten=new KittenAnimator($('kitty'),belly,{reduced});
+let savedBest=0,activePointer=null,keyboardHeld=false;
+try{
+  const record=JSON.parse(localStorage.getItem('belly-trap-v2'));
+  savedBest=record?.best??0;
+  // The old lifetime total is not a valid best under the new rules.
+  const preferences=record??JSON.parse(localStorage.getItem('belly-trap-v1'));
+  if(typeof preferences?.sound==='boolean')audio.enabled=preferences.sound;
+}catch{}
+const game=new TickleGame({best:savedBest,onState:stateChanged});
+function persist(){try{localStorage.setItem('belly-trap-v2',JSON.stringify({best:game.best,sound:audio.enabled}));}catch{document.querySelector('.timer').setAttribute('aria-label','Current and best score for this visit');}}
+function message(text){$('status-text').textContent=text;}
+function paintScore(){
+  const format=value=>value.toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});
+  $('current').textContent=format(game.current);$('best').textContent=format(game.best);
+  $('stage').textContent=`stage ${game.stage+1}`;
+}
+function stateChanged(state){
+  scene.dataset.state=state;kitten.setState(state);
+  if(state==='tickling'){
+    message('hold… eyes open? let go.');audio.purr();
+  }else if(state==='warning'){
+    audio.stop();message('let go!');
+  }else if(state==='attacking'){
+    audio.stop();persist();message('!');audio.growl();
+    kitten.pounce({onImpact:()=>{if(!reduced&&navigator.vibrate)navigator.vibrate([40,25,60]);},onComplete:()=>game.setState('caught')});
+  }else if(state==='caught'){
+    persist();message('got you. rub me again.');
+    // The next fresh press starts another round. A held finger never restarts it.
+  }else if(state==='safe'){
+    audio.stop();persist();
+    if(game.outcome==='escaped'){audio.chime();message('asleep again. rub me.');}
+    else if(game.outcome==='early')message('too soon. wait for the eyes.');
+    else message('run ended. rub me again.');
+  }else{
+    message('rub me');
+  }
+  paintScore();
+}
+function start(){if(game.state==='caught')game.reset();audio.unlock().then(()=>{if(game.state==='tickling')audio.purr();});game.begin(performance.now());}
+function release(cancelled=false){game.release(performance.now(),cancelled);activePointer=null;keyboardHeld=false;paintScore();persist();}
+belly.addEventListener('pointerdown',e=>{
+  if(e.button!==0||activePointer!==null||keyboardHeld||!['idle','safe','caught'].includes(game.state))return;
+  e.preventDefault();kitten.track(e.clientX,e.clientY);activePointer=e.pointerId;belly.setPointerCapture(e.pointerId);belly.focus({preventScroll:true});start();
+});
+belly.addEventListener('pointermove',e=>{if(e.pointerId===activePointer)kitten.track(e.clientX,e.clientY);});
+belly.addEventListener('pointerup',e=>{if(e.pointerId===activePointer)release();});
+belly.addEventListener('pointercancel',e=>{if(e.pointerId===activePointer)release(true);});
+belly.addEventListener('lostpointercapture',e=>{if(e.pointerId===activePointer)release(true);});
+belly.addEventListener('contextmenu',e=>e.preventDefault());
+window.addEventListener('keydown',e=>{
+  if(e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement)return;
+  if(e.code==='KeyM'&&!e.repeat){audio.enabled=!audio.enabled;audio.unlock().then(()=>{if(audio.enabled&&game.state==='tickling')audio.purr();});if(!audio.enabled)audio.stop();persist();return;}
+  if(e.code!=='Space')return;e.preventDefault();if(e.repeat||keyboardHeld||activePointer!==null)return;
+  if(['idle','safe','caught'].includes(game.state)){keyboardHeld=true;start();}
+});
+window.addEventListener('keyup',e=>{if(e.code==='Space'&&keyboardHeld){e.preventDefault();release();}});
+window.addEventListener('blur',()=>{if(activePointer!==null||keyboardHeld)release(true);});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(activePointer!==null||keyboardHeld)release(true);audio.stop();persist();}});
+window.addEventListener('pagehide',()=>{if(activePointer!==null||keyboardHeld)release(true);persist();});
+function frame(now){game.advance(now);kitten.update(now);if(game.state==='tickling')paintScore();requestAnimationFrame(frame);}
+paintScore();requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>
