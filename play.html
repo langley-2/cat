@@ -133,13 +133,18 @@ class TickleGame {
   get stage(){return Math.min(STAGES.length-1,Math.floor(this.escapes/2));}
   get difficulty(){return STAGES[this.stage];}
   setState(state){this.state=state;this.onState(state);}
-  endRun(){this.current=0;this.banked=0;this.round=0;this.escapes=0;}
+  endRun(){this.current=0;this.banked=0;this.round=0;this.escapes=0;this.paused=null;}
   begin(now){
     if(!['idle','safe'].includes(this.state))return false;
     this.round=0;this.started=now;this.outcome=null;
-    const d=this.difficulty;
-    this.warningAt=now+d.waitMin+this.random()*(d.waitMax-d.waitMin);
-    this.attackAt=this.warningAt+d.reactionMin+this.random()*(d.reactionMax-d.reactionMin);
+    if(this.paused){
+      // Resume the countdown left by an early lift; re-pressing never rerolls it.
+      this.warningAt=now+this.paused.wait;this.attackAt=this.warningAt+this.paused.reaction;this.paused=null;
+    }else{
+      const d=this.difficulty;
+      this.warningAt=now+d.waitMin+this.random()*(d.waitMax-d.waitMin);
+      this.attackAt=this.warningAt+d.reactionMin+this.random()*(d.reactionMax-d.reactionMin);
+    }
     this.setState('tickling');return true;
   }
   advance(now){
@@ -164,7 +169,10 @@ class TickleGame {
       this.best=Math.max(this.best,this.banked);
       this.escapes=Math.min(8,this.escapes+1);this.setState('safe');
     }else if(this.state==='tickling'){
-      this.endRun();this.outcome='early';this.setState('safe');
+      // An early lift keeps the run but forfeits this touch's unbanked time, and
+      // pauses the countdown so quick taps can't dodge or farm the wake-up.
+      this.paused={wait:this.warningAt-now,reaction:this.attackAt-this.warningAt};
+      this.round=0;this.current=this.banked;this.outcome='early';this.setState('safe');
     }
   }
   reset(){if(['caught','safe'].includes(this.state)){this.round=0;this.setState('idle');}}

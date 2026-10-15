@@ -17,15 +17,21 @@ test('getting caught clears current and difficulty immediately, preserving the b
  assert.equal(g.state,'attacking');assert.equal(g.current,0);assert.equal(g.banked,0);assert.equal(g.round,0);assert.equal(g.stage,0);assert.equal(g.best,best);
  g.setState('caught');g.reset();assert.equal(g.state,'idle');g.begin(80000);g.advance(80300);assert.equal(g.current,.3);
 });
-test('repeated one-second releases cannot farm either score',()=>{
+test('repeated one-second releases cannot farm either score or dodge the countdown',()=>{
  const g=new TickleGame({random:()=>.5});
- for(let i=0;i<30;i++){
-  g.begin(i*5000);g.release(i*5000+1000);assert.equal(g.outcome,'early');assert.equal(g.current,0);assert.equal(g.best,0);assert.equal(g.stage,0);
- }
+ for(let i=0;i<2;i++){g.begin(i*5000);g.release(i*5000+1000);assert.equal(g.outcome,'early');assert.equal(g.current,0);assert.equal(g.best,0);}
+ g.begin(10000);assert.equal(g.warningAt,10175);g.release(11000);assert.equal(g.state,'attacking');assert.equal(g.current,0);assert.equal(g.best,0);
 });
-test('early release also clears an existing streak but retains the earned best',()=>{
+test('early release keeps the banked score and stage, forfeiting only that touch',()=>{
  const g=setup(0);dodge(g,0);dodge(g,10000);const best=g.best;
- g.begin(20000);g.release(20100);assert.equal(g.outcome,'early');assert.equal(g.current,0);assert.equal(g.stage,0);assert.equal(g.best,best);
+ g.begin(20000);g.advance(20100);assert.ok(g.current>best);g.release(20100);
+ assert.equal(g.outcome,'early');assert.equal(g.current,best);assert.equal(g.banked,best);assert.equal(g.stage,1);assert.equal(g.best,best);
+ g.begin(30000);assert.equal(g.warningAt,30450);g.release(g.warningAt);assert.equal(g.outcome,'escaped');assert.ok(Math.abs(g.current-(best+.45))<1e-9);
+});
+test('rapid tapping only banks the time of the touch that sees the eyes open',()=>{
+ const g=setup(0);
+ for(let i=0;i<6;i++){g.begin(i*1000);g.release(i*1000+100);assert.equal(g.outcome,'early');assert.equal(g.current,0);}
+ g.begin(6000);g.release(6100);assert.equal(g.outcome,'escaped');assert.ok(Math.abs(g.current-.05)<1e-9);assert.ok(Math.abs(g.best-.05)<1e-9);
 });
 test('a failed long hold cannot create a best without a successful escape',()=>{
  const g=new TickleGame({random:()=>.99999});g.begin(0);g.advance(g.warningAt);assert.ok(g.current>3.6);
@@ -37,7 +43,7 @@ test('release checks deadlines between animation frames',()=>{
 });
 test('the warning boundary is a valid escape, just before it is early',()=>{
  const g=setup(0);g.begin(0);g.release(g.warningAt-.01);assert.equal(g.outcome,'early');assert.equal(g.best,0);
- g.begin(10000);g.release(g.warningAt);assert.equal(g.outcome,'escaped');assert.equal(g.current,.65);
+ const h=setup(0);h.begin(0);h.release(h.warningAt);assert.equal(h.outcome,'escaped');assert.equal(h.current,.65);
 });
 test('background interruption ends the run without a delayed attack or new record',()=>{
  for(const elapsed of [100,700,90000]){

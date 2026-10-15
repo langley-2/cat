@@ -40,12 +40,14 @@ function openGame(storage=new Map(),storageBlocked=false){
   state(){return select('#scene').dataset.state;},
  };
 }
-test('shipped pointer handlers reset early releases, bank escapes, and clear caught runs',()=>{
+test('shipped pointer handlers keep scores on early releases, bank escapes, and clear caught runs',()=>{
  const app=openGame();
- for(let i=0;i<4;i++){app.press();app.tick(1000);app.release();assert.equal(app.select('#current').textContent,'0.0');assert.equal(app.select('#best').textContent,'0.0');}
  for(let i=0;i<2;i++){app.press();app.tick(2175);assert.equal(app.state(),'warning');app.release();assert.equal(app.state(),'safe');}
  assert.equal(app.select('#stage').textContent,'stage 2');assert.equal(app.select('#best').textContent,'4.4');
- app.press();app.tick(3000);assert.equal(app.state(),'attacking');assert.equal(app.select('#current').textContent,'0.0');assert.equal(app.select('#best').textContent,'4.4');
+ app.press();app.tick(1000);app.release();assert.equal(app.state(),'safe');
+ assert.equal(app.select('#current').textContent,'4.4');assert.equal(app.select('#stage').textContent,'stage 2');
+ // A fresh stage-two countdown would still be asleep; the carried-over one has already pounced.
+ app.press();app.tick(1500);assert.equal(app.state(),'attacking');assert.equal(app.select('#current').textContent,'0.0');assert.equal(app.select('#best').textContent,'4.4');
  app.tick(2100);assert.equal(app.state(),'caught');app.release();app.press();app.tick(100);assert.equal(app.state(),'tickling');assert.equal(app.select('#current').textContent,'0.1');
  const reopened=openGame(app.storage);assert.equal(reopened.select('#best').textContent,'4.4');assert.equal(reopened.select('#current').textContent,'0.0');
 });
