@@ -113,7 +113,7 @@
       <button id="belly" class="belly-target" aria-label="Hold to rub the belly. Release when the cat opens its eyes." aria-describedby="instructions"><span class="touch-ring" aria-hidden="true"></span></button>
     </div>
     <div class="guide" id="game-status" role="status" aria-live="polite"><span id="status-text">rub me</span></div>
-    <p id="instructions" class="sr-only">Hold the belly with a mouse, touch, or Space. Keep holding until the eyes open, then release immediately. A clean escape banks your tickle time and lets you continue the current run. Releasing early or getting caught resets your current score to zero. Best records only time banked by clean escapes and is saved in this browser. Every two escapes advances the difficulty, up to stage five. Leaving the game during a rub ends the run. Reloading starts a fresh run. Press M to toggle sound.</p>
+    <p id="instructions" class="sr-only">Hold the belly with a mouse, touch, or Space. Keep holding until the eyes open, then release immediately. A clean escape banks your tickle time and lets you continue the current run. Releasing before the eyes open pauses the round and keeps your time. Releasing the instant the eyes open counts as a guess. Getting caught resets your current score to zero. Best records only time banked by clean escapes and is saved in this browser. Every two escapes advances the difficulty, up to stage five. Leaving the game during a rub ends the run. Reloading starts a fresh run. Press M to toggle sound.</p>
   </main>
   <script>
 (()=>{'use strict';
@@ -124,16 +124,18 @@ const STAGES = [
   {waitMin:400,waitMax:2800,reactionMin:240,reactionMax:325},
   {waitMin:350,waitMax:2500,reactionMin:220,reactionMax:290},
 ];
+// Releases this soon after the eyes open are anticipation, not reaction.
+const FALSE_START_MS=100;
 class TickleGame {
   constructor({best=0,random=Math.random,onState=()=>{}}={}) {
     this.best=Number.isFinite(best)&&best>=0?best:0;
-    this.current=0;this.banked=0;this.escapes=0;
+    this.current=0;this.banked=0;this.carried=0;this.escapes=0;
     this.random=random;this.onState=onState;this.state='idle';this.round=0;
   }
   get stage(){return Math.min(STAGES.length-1,Math.floor(this.escapes/2));}
   get difficulty(){return STAGES[this.stage];}
   setState(state){this.state=state;this.onState(state);}
-  endRun(){this.current=0;this.banked=0;this.round=0;this.escapes=0;this.paused=null;}
+  endRun(){this.current=0;this.banked=0;this.carried=0;this.round=0;this.escapes=0;this.paused=null;}
   begin(now){
     if(!['idle','safe'].includes(this.state))return false;
     this.round=0;this.started=now;this.outcome=null;
@@ -151,7 +153,7 @@ class TickleGame {
     if(this.state==='tickling'){
       // Live time is provisional until an eyes-open escape succeeds.
       this.round=Math.max(this.round,(Math.min(now,this.warningAt)-this.started)/1000);
-      this.current=this.banked+this.round;
+      this.current=this.banked+this.carried+this.round;
       if(now>=this.warningAt)this.setState('warning');
     }
     if(this.state==='warning'&&now>=this.attackAt){
@@ -164,15 +166,18 @@ class TickleGame {
       this.endRun();this.outcome='interrupted';this.setState('safe');return;
     }
     this.advance(now);
-    if(this.state==='warning'){
-      this.outcome='escaped';this.banked=this.current;
+    if(this.state==='warning'&&now-this.warningAt<FALSE_START_MS){
+      // Too fast to be a reaction, so rapid tapping can't fish for safe escapes.
+      this.endRun();this.outcome='jumped';this.setState('attacking');
+    }else if(this.state==='warning'){
+      this.outcome='escaped';this.banked=this.current;this.carried=0;
       this.best=Math.max(this.best,this.banked);
       this.escapes=Math.min(8,this.escapes+1);this.setState('safe');
     }else if(this.state==='tickling'){
-      // An early lift keeps the run but forfeits this touch's unbanked time, and
-      // pauses the countdown so quick taps can't dodge or farm the wake-up.
+      // An early lift carries the unbanked time forward and pauses the countdown,
+      // so lifting and pressing again can't dodge or reroll the wake-up.
       this.paused={wait:this.warningAt-now,reaction:this.attackAt-this.warningAt};
-      this.round=0;this.current=this.banked;this.outcome='early';this.setState('safe');
+      this.carried+=this.round;this.round=0;this.outcome='early';this.setState('safe');
     }
   }
   reset(){if(['caught','safe'].includes(this.state)){this.round=0;this.setState('idle');}}
@@ -288,9 +293,14 @@ class CatAudio {
   constructor(){this.enabled=false;this.context=null;this.purring=null;}
   async unlock(){
     if(!this.enabled)return;
-    try {this.context ??= new (window.AudioContext||window.webkitAudioContext)();if(this.context.state==='suspended')await this.context.resume();} catch {this.enabled=false;}
+    try {this.context ??= new (window.AudioContext||window.webkitAudioContext)();if(this.context.state!=='running')await this.context.resume();} catch {this.enabled=false;}
   }
-  noise(seconds){const c=this.context,b=c.createBuffer(1,c.sampleRate*seconds,c.sampleRate),d=b.getChannelData(0);let last=0;for(let i=0;i<d.length;i++){last=(last+.035*(Math.random()*2-1))/1.025;d[i]=last*8;}const s=c.createBufferSource();s.buffer=b;return s;}
+  noise(seconds){
+    // Generated once per length; regenerating on every press stalls slow phones.
+    const c=this.context,s=c.createBufferSource();this.buffers??={};
+    if(!this.buffers[seconds]){const b=c.createBuffer(1,c.sampleRate*seconds,c.sampleRate),d=b.getChannelData(0);let last=0;for(let i=0;i<d.length;i++){last=(last+.035*(Math.random()*2-1))/1.025;d[i]=last*8;}this.buffers[seconds]=b;}
+    s.buffer=this.buffers[seconds];return s;
+  }
   purr(){
     this.stop();if(!this.enabled||!this.context)return;
     const c=this.context,g=c.createGain(),f=c.createBiquadFilter(),n=this.noise(3),lfo=c.createOscillator(),depth=c.createGain();
@@ -342,12 +352,12 @@ function stateChanged(state){
     audio.stop();persist();message('!');audio.growl();
     kitten.pounce({onImpact:()=>{if(!reduced&&navigator.vibrate)navigator.vibrate([40,25,60]);},onComplete:()=>game.setState('caught')});
   }else if(state==='caught'){
-    persist();message('got you. rub me again.');
+    persist();message(game.outcome==='jumped'?'too quick. that was a guess.':'got you. rub me again.');
     // The next fresh press starts another round. A held finger never restarts it.
   }else if(state==='safe'){
     audio.stop();persist();
     if(game.outcome==='escaped'){audio.chime();message('asleep again. rub me.');}
-    else if(game.outcome==='early')message('too soon. wait for the eyes.');
+    else if(game.outcome==='early')message('paused. rub me to keep going.');
     else message('run ended. rub me again.');
   }else{
     message('rub me');
@@ -365,6 +375,9 @@ belly.addEventListener('pointerup',e=>{if(e.pointerId===activePointer)release();
 belly.addEventListener('pointercancel',e=>{if(e.pointerId===activePointer)release(true);});
 belly.addEventListener('lostpointercapture',e=>{if(e.pointerId===activePointer)release(true);});
 belly.addEventListener('contextmenu',e=>e.preventDefault());
+// Mobile browsers only allow audio to start on a lift (pointerup/touchend), not on
+// a touch press, so unlock on every lift too; the first press alone can't.
+for(const type of ['pointerup','touchend','keydown'])window.addEventListener(type,()=>audio.unlock(),{capture:true,passive:true});
 window.addEventListener('keydown',e=>{
   if(e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement)return;
   if(e.code==='KeyM'&&!e.repeat){audio.enabled=!audio.enabled;audio.unlock().then(()=>{if(audio.enabled&&game.state==='tickling')audio.purr();});if(!audio.enabled)audio.stop();persist();return;}

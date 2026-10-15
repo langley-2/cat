@@ -5,16 +5,18 @@ export const STAGES = [
   {waitMin:400,waitMax:2800,reactionMin:240,reactionMax:325},
   {waitMin:350,waitMax:2500,reactionMin:220,reactionMax:290},
 ];
+// Releases this soon after the eyes open are anticipation, not reaction.
+export const FALSE_START_MS=100;
 export class TickleGame {
   constructor({best=0,random=Math.random,onState=()=>{}}={}) {
     this.best=Number.isFinite(best)&&best>=0?best:0;
-    this.current=0;this.banked=0;this.escapes=0;
+    this.current=0;this.banked=0;this.carried=0;this.escapes=0;
     this.random=random;this.onState=onState;this.state='idle';this.round=0;
   }
   get stage(){return Math.min(STAGES.length-1,Math.floor(this.escapes/2));}
   get difficulty(){return STAGES[this.stage];}
   setState(state){this.state=state;this.onState(state);}
-  endRun(){this.current=0;this.banked=0;this.round=0;this.escapes=0;this.paused=null;}
+  endRun(){this.current=0;this.banked=0;this.carried=0;this.round=0;this.escapes=0;this.paused=null;}
   begin(now){
     if(!['idle','safe'].includes(this.state))return false;
     this.round=0;this.started=now;this.outcome=null;
@@ -32,7 +34,7 @@ export class TickleGame {
     if(this.state==='tickling'){
       // Live time is provisional until an eyes-open escape succeeds.
       this.round=Math.max(this.round,(Math.min(now,this.warningAt)-this.started)/1000);
-      this.current=this.banked+this.round;
+      this.current=this.banked+this.carried+this.round;
       if(now>=this.warningAt)this.setState('warning');
     }
     if(this.state==='warning'&&now>=this.attackAt){
@@ -45,15 +47,18 @@ export class TickleGame {
       this.endRun();this.outcome='interrupted';this.setState('safe');return;
     }
     this.advance(now);
-    if(this.state==='warning'){
-      this.outcome='escaped';this.banked=this.current;
+    if(this.state==='warning'&&now-this.warningAt<FALSE_START_MS){
+      // Too fast to be a reaction, so rapid tapping can't fish for safe escapes.
+      this.endRun();this.outcome='jumped';this.setState('attacking');
+    }else if(this.state==='warning'){
+      this.outcome='escaped';this.banked=this.current;this.carried=0;
       this.best=Math.max(this.best,this.banked);
       this.escapes=Math.min(8,this.escapes+1);this.setState('safe');
     }else if(this.state==='tickling'){
-      // An early lift keeps the run but forfeits this touch's unbanked time, and
-      // pauses the countdown so quick taps can't dodge or farm the wake-up.
+      // An early lift carries the unbanked time forward and pauses the countdown,
+      // so lifting and pressing again can't dodge or reroll the wake-up.
       this.paused={wait:this.warningAt-now,reaction:this.attackAt-this.warningAt};
-      this.round=0;this.current=this.banked;this.outcome='early';this.setState('safe');
+      this.carried+=this.round;this.round=0;this.outcome='early';this.setState('safe');
     }
   }
   reset(){if(['caught','safe'].includes(this.state)){this.round=0;this.setState('idle');}}

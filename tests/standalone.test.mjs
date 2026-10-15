@@ -40,12 +40,12 @@ function openGame(storage=new Map(),storageBlocked=false){
   state(){return select('#scene').dataset.state;},
  };
 }
-test('shipped pointer handlers keep scores on early releases, bank escapes, and clear caught runs',()=>{
+test('shipped pointer handlers keep time on early releases, bank escapes, and clear caught runs',()=>{
  const app=openGame();
- for(let i=0;i<2;i++){app.press();app.tick(2175);assert.equal(app.state(),'warning');app.release();assert.equal(app.state(),'safe');}
+ for(let i=0;i<2;i++){app.press();app.tick(2275);assert.equal(app.state(),'warning');app.release();assert.equal(app.state(),'safe');}
  assert.equal(app.select('#stage').textContent,'stage 2');assert.equal(app.select('#best').textContent,'4.4');
- app.press();app.tick(1000);app.release();assert.equal(app.state(),'safe');
- assert.equal(app.select('#current').textContent,'4.4');assert.equal(app.select('#stage').textContent,'stage 2');
+ app.press();app.tick(1050);app.release();assert.equal(app.state(),'safe');
+ assert.equal(app.select('#current').textContent,'5.4');assert.equal(app.select('#best').textContent,'4.4');assert.equal(app.select('#stage').textContent,'stage 2');
  // A fresh stage-two countdown would still be asleep; the carried-over one has already pounced.
  app.press();app.tick(1500);assert.equal(app.state(),'attacking');assert.equal(app.select('#current').textContent,'0.0');assert.equal(app.select('#best').textContent,'4.4');
  app.tick(2100);assert.equal(app.state(),'caught');app.release();app.press();app.tick(100);assert.equal(app.state(),'tickling');assert.equal(app.select('#current').textContent,'0.1');
@@ -53,13 +53,13 @@ test('shipped pointer handlers keep scores on early releases, bank escapes, and 
 });
 test('shipped focus and capture interruption handling cannot keep or bank provisional time',()=>{
  for(const interrupt of [a=>a.window.dispatch('blur'),a=>a.select('#belly').dispatch('pointercancel',{pointerId:1}),a=>a.select('#belly').dispatch('lostpointercapture',{pointerId:1}),a=>{a.document.hidden=true;a.document.dispatch('visibilitychange');}]){
-  const app=openGame();app.press();app.tick(2175);app.release();app.press();app.tick(1000);interrupt(app);
+  const app=openGame();app.press();app.tick(2275);app.release();app.press();app.tick(1000);interrupt(app);
   assert.equal(app.select('#current').textContent,'0.0');assert.equal(app.select('#best').textContent,'2.2');assert.equal(app.state(),'safe');
  }
 });
 test('shipped keyboard controls bank scores and storage failure leaves game playable',()=>{
  const app=openGame(new Map(),true);
- app.window.dispatch('keydown',{code:'Space',repeat:false});app.tick(2175);app.window.dispatch('keyup',{code:'Space'});
+ app.window.dispatch('keydown',{code:'Space',repeat:false});app.tick(2275);app.window.dispatch('keyup',{code:'Space'});
  assert.equal(app.state(),'safe');assert.equal(app.select('#best').textContent,'2.2');
  app.press();app.tick(3000);assert.equal(app.select('#current').textContent,'0.0');assert.equal(app.select('#best').textContent,'2.2');
  assert.match(app.select('.timer').attrs['aria-label'],/this visit/);

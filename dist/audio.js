@@ -2,9 +2,14 @@ export class CatAudio {
   constructor(){this.enabled=false;this.context=null;this.purring=null;}
   async unlock(){
     if(!this.enabled)return;
-    try {this.context ??= new (window.AudioContext||window.webkitAudioContext)();if(this.context.state==='suspended')await this.context.resume();} catch {this.enabled=false;}
+    try {this.context ??= new (window.AudioContext||window.webkitAudioContext)();if(this.context.state!=='running')await this.context.resume();} catch {this.enabled=false;}
   }
-  noise(seconds){const c=this.context,b=c.createBuffer(1,c.sampleRate*seconds,c.sampleRate),d=b.getChannelData(0);let last=0;for(let i=0;i<d.length;i++){last=(last+.035*(Math.random()*2-1))/1.025;d[i]=last*8;}const s=c.createBufferSource();s.buffer=b;return s;}
+  noise(seconds){
+    // Generated once per length; regenerating on every press stalls slow phones.
+    const c=this.context,s=c.createBufferSource();this.buffers??={};
+    if(!this.buffers[seconds]){const b=c.createBuffer(1,c.sampleRate*seconds,c.sampleRate),d=b.getChannelData(0);let last=0;for(let i=0;i<d.length;i++){last=(last+.035*(Math.random()*2-1))/1.025;d[i]=last*8;}this.buffers[seconds]=b;}
+    s.buffer=this.buffers[seconds];return s;
+  }
   purr(){
     this.stop();if(!this.enabled||!this.context)return;
     const c=this.context,g=c.createGain(),f=c.createBiquadFilter(),n=this.noise(3),lfo=c.createOscillator(),depth=c.createGain();

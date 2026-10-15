@@ -32,12 +32,12 @@ function stateChanged(state){
     audio.stop();persist();message('!');audio.growl();
     kitten.pounce({onImpact:()=>{if(!reduced&&navigator.vibrate)navigator.vibrate([40,25,60]);},onComplete:()=>game.setState('caught')});
   }else if(state==='caught'){
-    persist();message('got you. rub me again.');
+    persist();message(game.outcome==='jumped'?'too quick. that was a guess.':'got you. rub me again.');
     // The next fresh press starts another round. A held finger never restarts it.
   }else if(state==='safe'){
     audio.stop();persist();
     if(game.outcome==='escaped'){audio.chime();message('asleep again. rub me.');}
-    else if(game.outcome==='early')message('too soon. wait for the eyes.');
+    else if(game.outcome==='early')message('paused. rub me to keep going.');
     else message('run ended. rub me again.');
   }else{
     message('rub me');
@@ -55,6 +55,9 @@ belly.addEventListener('pointerup',e=>{if(e.pointerId===activePointer)release();
 belly.addEventListener('pointercancel',e=>{if(e.pointerId===activePointer)release(true);});
 belly.addEventListener('lostpointercapture',e=>{if(e.pointerId===activePointer)release(true);});
 belly.addEventListener('contextmenu',e=>e.preventDefault());
+// Mobile browsers only allow audio to start on a lift (pointerup/touchend), not on
+// a touch press, so unlock on every lift too; the first press alone can't.
+for(const type of ['pointerup','touchend','keydown'])window.addEventListener(type,()=>audio.unlock(),{capture:true,passive:true});
 window.addEventListener('keydown',e=>{
   if(e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement)return;
   if(e.code==='KeyM'&&!e.repeat){audio.enabled=!audio.enabled;audio.unlock().then(()=>{if(audio.enabled&&game.state==='tickling')audio.purr();});if(!audio.enabled)audio.stop();persist();return;}
